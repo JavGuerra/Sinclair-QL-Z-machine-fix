@@ -1,6 +1,6 @@
 # Parche de español para la Máquina-Z de Infocom
 
-_Spanish patch for the Z-machine of Infocom_
+_Spanish fix for the Z-machine of Infocom_
 
 **Última revisión**: noviembre 2026  
 **Por**: Javier Guerra
