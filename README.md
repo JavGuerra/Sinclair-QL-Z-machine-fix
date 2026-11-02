@@ -5,7 +5,7 @@ _Spanish patch for the Z-machine of Infocom_
 **Última revisión**: noviembre 2026  
 **Por**: Javier Guerra
 
-El programa en SuperBASIC [zipfix_bas](./zipfix_bas) parchea el intérprete de la [Máquina-Z](https://es.wikipedia.org/wiki/M%C3%A1quina-Z) de aventuras Infocom para Sinclair QL llamado `zip` (_Z-machine Interpreter Program_, no confundir con el compresor de ficheros). El parche permite que se muestren correctamente los caracteres acentuados, la ñ y otros signos de puntuación al leer los ficheros de aventuras conversacionales que soporta.
+El programa en SuperBASIC [zipfix_bas](./zipfix_bas) parchea el intérprete de la [Máquina-Z](https://es.wikipedia.org/wiki/M%C3%A1quina-Z) de aventuras de Infocom para el Sinclair QL llamado `zip` (_Z-machine Interpreter Program_, no confundir con el compresor de ficheros). El parche permite que se muestren correctamente los caracteres acentuados, la ñ y otros signos de puntuación al leer los ficheros de aventuras conversacionales que soporta.
 
 El programa `zip` es un port de ZIP 2.0 de Mark Howell a QDOS realizado por Luke Roberts en noviembre de 1994, que entiende las versiones .z1 a .z5 de estas aventuras.
 
@@ -25,8 +25,8 @@ El programa `zipfix_bas` toma el ejecutable del intérprete, lo copia, y lleva a
 
 Para su elaboración, a la IA se le ha facilitado:
 
-- El fichero `aventuras.zip` (disponible [aquí](https://sinclairql.es/utilidades/aventuras.zip), un compendio de aventuras .z5 en español que contiene también un menú de arranque, el interprete original renombrado a `zip_exe` e información sobre los cinco juegos que incluye.
-- La tabla de conversión `chr.csv` que fue generada mediante la utilidad [Tabla de caracteres del QL](https://sinclairql.speccy.org/articulos/comunicaciones/charset.html) creada por Juanjo Ruiz. Esta tabla ayuda a la IA a buscar las equivalencias del juego de caracteres del QL con la tabla ZSCII de la Máquina-Z que usan los juegos.
+- El fichero `aventuras.zip` disponible [aquí](https://sinclairql.es/utilidades/aventuras.zip), un compendio de aventuras .z5 en español que contiene también un menú de arranque, el interprete original renombrado a `zip_exe` e información sobre los seis juegos que incluye.
+- La tabla de conversión [chr.csv](./chr.csv) que fue generada mediante la utilidad [Tabla de caracteres del QL](https://sinclairql.speccy.org/articulos/comunicaciones/charset.html) creada por Juanjo Ruiz. Esta tabla ayuda a la IA a buscar las equivalencias del juego de caracteres del QL con la tabla ZSCII de la Máquina-Z que usan los juegos.
 
 La IA ha realizado numerosas pruebas y versiones previas, incluyendo la aventura [chrtest_z5](./chrtest_z5) que se incluye en este repositorio, y que espera que se introduzcan caracteres especiales y entonces devuelve su código equivalente en la tabla de caracteres ZSCII para comprobar que la conversión de los caracteres del QL es correcta. Ver el fichero [ZSCII.md](./ZSCII.md).
 
@@ -51,7 +51,7 @@ La IA ha realizado numerosas pruebas y versiones previas, incluyendo la aventura
 - Imagen de disquete para QL con el programa ejecutable ya parcheado: [aventuras_es.img](./aventuras_es.img)
 - Fichero comprimido para QL con el programa ejecutable ya parcheado: [aventuras_es_zip](./aventuras_es_zip)
 - Fichero SuperBASIC usado para aplicar el parche: [zipfix_bas](./zipfix_bas)
-- Sobre este parche: Artículo en el blog de Sinclair QL en castellano
+- Sobre este parche: [Artículo en el blog de Sinclair QL en castellano](https://sinclairqles.wordpress.com/2026/11/02/parche-de-espanol-para-la-maquina-z-de-infocom/)
 
 ## Licencia
 
