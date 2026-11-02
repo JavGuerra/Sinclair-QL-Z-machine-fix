@@ -5,6 +5,8 @@ _Spanish fix for the Z-machine of Infocom_
 **Última revisión**: noviembre 2026  
 **Por**: Javier Guerra
 
+![Ejemplo de aventura en español](./zipes_exe.png)
+
 El programa en SuperBASIC [zipfix_bas](./zipfix_bas) parchea el intérprete de la [Máquina-Z](https://es.wikipedia.org/wiki/M%C3%A1quina-Z) de aventuras de Infocom para el Sinclair QL llamado `zip` (_Z-machine Interpreter Program_, no confundir con el compresor de ficheros). El parche permite que se muestren correctamente los caracteres acentuados, la ñ y otros signos de puntuación al leer los ficheros de aventuras conversacionales que soporta.
 
 El programa `zip` es un port de ZIP 2.0 de Mark Howell a QDOS realizado por Luke Roberts en noviembre de 1994, que entiende las versiones .z1 a .z5 de estas aventuras.
