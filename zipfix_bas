@@ -1,0 +1,394 @@
+100 REMark ==========================================================
+110 REMark  ZIPFIX_BAS - Caracteres espanoles para el interprete ZIP
+120 REMark  Crea una COPIA de zip_exe y modifica la copia. No toca el
+130 REMark  original. Requiere Toolkit II (TK2_EXT).
+140 REMark ==========================================================
+150 :
+160 origen$ = 'flp1_zip_exe'
+170 destino$ = 'flp1_zipes_exe'
+180 errores = 0
+190 msgerr = 0
+200 msgtot = 0
+210 enterr = 0
+220 :
+230 CLS : PRINT 'CONVERSI'&CHR$(150)&'N DE ZIP_EXE A ESPA'&CHR$(169)&'OL'
+240 PRINT : PRINT 'Origen  [';origen$;']'
+250 INPUT 'Origen (Enter = igual): ';a$ : IF a$ <> '' THEN origen$ = a$
+260 PRINT 'Destino [';destino$;']'
+270 INPUT 'Destino (Enter = igual): ';a$ : IF a$ <> '' THEN destino$ = a$
+280 PRINT
+290 IF origen$ == destino$ THEN PRINT 'Origen y destino no pueden ser iguales.' : STOP
+300 :
+310 REMark --- 1. Leer tipo y dataspace del original ---
+320 OPEN_IN #3,origen$
+330 tipo1 = FTYP(#3) : dat1 = FDAT(#3) : lon1 = FLEN(#3)
+340 CLOSE #3
+350 IF tipo1 <> 1 THEN PRINT 'AVISO: el origen no es un ejecutable (tipo ';tipo1;').' : PRINT 'Se ha perdido la cabecera? Descomprimelo con unzip bajo QL.' : STOP
+360 :
+370 REMark --- 2. Copiar CONSERVANDO la cabecera ---
+380 PRINT 'Copiando zip_exe...'
+390 COPY_O origen$ TO destino$
+400 :
+410 REMark --- 3. Comprobar que la copia es ejecutable ---
+420 OPEN #3,destino$
+430 tipo2 = FTYP(#3) : dat2 = FDAT(#3) : lon2 = FLEN(#3)
+440 IF tipo2 <> tipo1 OR dat2 <> dat1 OR lon2 <> lon1
+450   CLOSE #3
+460   PRINT 'ERROR: la copia no conserva la cabecera del ejecutable.'
+470   PRINT 'Origen: tipo ';tipo1;' dataspace ';dat1;' largo ';lon1
+480   PRINT 'Copia : tipo ';tipo2;' dataspace ';dat2;' largo ';lon2
+490   PRINT 'Prueba a copiar a mano con COPY_H y repite.'
+500   STOP
+510 END IF 
+520 :
+530 REMark --- 4. Comprobar que es la version esperada ---
+540 PRINT 'Comprobando la versi'&CHR$(150)&'n de zip_exe...'
+550 RESTORE 1560 : ok = 1 : bloque 0
+560 IF NOT ok
+570   CLOSE #3
+580   PRINT 'ERROR: este zip_exe no es el esperado. No se modifica nada.'
+590   PRINT '(Se ha dejado la copia sin tocar en ';destino$;')'
+600   STOP
+610 END IF 
+620 :
+630 REMark --- 5. Aplicar los parches ---
+640 PRINT 'Aplicando los parches...'
+650 RESTORE 1820 : bloque 1
+660 :
+670 REMark --- 6. Verificar lo escrito ---
+680 PRINT 'Verificando. Espere, por favor...'
+690 RESTORE 1820 : ok = 1 : bloque 2
+700 REMark --- 7. Entrada de texto (opcional): el juego entiende lo que se teclea con
+710 REMark     acentos y n (convierte los codigos del QL a los del juego). Para NO
+720 REMark     aplicarlo, pon REMark al principio de la linea siguiente.
+730 IF ok THEN entrada
+740 REMark --- 8. Mensajes en castellano: todos en una unica tabla de DATA
+750 REMark     (ver 'TABLA UNICA DE MENSAJES' al final). Para NO traducirlos,
+760 REMark     pon REMark al principio de la linea siguiente.
+770 IF ok THEN mensajes 3320 : REMark 3320 = primera linea de la tabla de mensajes
+780 IF msgtot THEN PRINT '  Total de mensajes traducidos: ';msgtot
+790 CLOSE #3
+800 PRINT
+810 IF ok
+820   PRINT 'LISTO. Fichero modificado: ';destino$
+830   PRINT 'No olvides usar el nuevo nombre del ejecutable para lanzar tus aventuras.'
+840   PRINT 'Prueba: EW ';destino$;';"flp1_aventura_z5" (cambiar esto por el dispositivo y nombre de la aventura que corresponda).'
+850   IF msgerr THEN PRINT 'AVISO: alg'&CHR$(153)&'n bloque de mensajes no se ha traducido (ver arriba).'
+860   IF enterr THEN PRINT 'AVISO: el parche de entrada de texto no se ha aplicado (ver arriba).'
+870 ELSE 
+880   PRINT 'ERROR: la verificaci'&CHR$(150)&'n ha fallado. No uses ';destino$
+890 END IF 
+900 STOP
+910 :
+920 REMark Procesa un bloque de DATA: n, y n veces (posicion, cuantos, bytes)
+930 REMark modo 0 = comprobar bytes esperados / modo 1 = escribir
+940 REMark modo 2 = releer y comparar con lo escrito
+950 DEFine PROCedure bloque (modo)
+960   LOCal n, i, j, pos, cnt, v%, b%
+970   READ n
+980   FOR i = 1 TO n
+990     READ pos, cnt
+1000     FOR j = 0 TO cnt - 1
+1010       READ v%
+1020       IF modo = 1
+1030         BPUT #3\(pos + j), v%
+1040       ELSE 
+1050         BGET #3\(pos + j), b%
+1060         IF b% <> v% THEN ok = 0
+1070       END IF 
+1080     END FOR j
+1090   END FOR i
+1100 END DEFine bloque
+1110 REMark ==============================================================
+1120 REMark  PROCedure entrada
+1130 REMark  Parche de la entrada de texto: convierte los acentos y la n tecleados
+1140 REMark  (codigos del QL) a los codigos que usa el juego, para que el parser los
+1150 REMark  reconozca. Comprueba el byte original de $1dce (BLOQUE 3), escribe el
+1160 REMark  BLOQUE 4 y lo verifica. Si la comprobacion falla no escribe nada y deja
+1170 REMark  enterr = 1. Si falla la verificacion final deja ok = 0.
+1180 REMark ==============================================================
+1190 DEFine PROCedure entrada
+1200   LOCal oksave
+1210   oksave = ok
+1220   RESTORE 2540 : ok = 1 : bloque 0
+1230   IF NOT ok
+1240     PRINT '  Entrada de texto NO modificada: los bytes originales no coinciden.'
+1250     enterr = 1
+1260     ok = oksave
+1270     RETurn
+1280   END IF
+1290   RESTORE 2600 : bloque 1
+1300   RESTORE 2600 : ok = 1 : bloque 2
+1310   IF ok
+1320     PRINT '  Entrada de texto: caracteres convertidos.'
+1330     ok = oksave
+1340   ELSE
+1350     PRINT '  ERROR: la verificaci'&CHR$(150)&'n del parche de entrada ha fallado.'
+1360   END IF
+1370 END DEFine entrada
+1380 :
+1390 REMark ================================================================
+1400 REMark  DATOS DEL PARCHE.  Posiciones = bytes desde el inicio del fichero SIN
+1410 REMark  la cabecera de 64 bytes de QDOS (el primer byte es $60, de 'bra.s').
+1420 REMark  Las direcciones $xxxx de los comentarios son esas mismas posiciones.
+1430 REMark  SALIDA (BLOQUE 2). Codigo del interprete (compilado con C68): d3 = codigo
+1440 REMark  ZSCII a escribir, a2 = buffer de 1 caracter (a2)=char,(a4)=0. La rutina de
+1450 REMark  $5234 imprime la cadena de a2 desde $5354. Antes solo sabia imprimir '?' o
+1460 REMark  simbolos de caja para los ZSCII 155..223 (a=169,n=206 ...).
+1470 REMark  Ahora: ZSCII 155..223 -> codigo del QL por tabla (acentos, n, !, ?).
+1480 REMark  ENTRADA (BLOQUES 3 y 4, opcional). La linea tecleada llega al juego con
+1490 REMark  codigos QL (n=137) y el juego usa ZSCII (n=206). Se convierte buscando el
+1500 REMark  codigo QL en la MISMA tabla de 69 bytes. Mayusculas QL 160-171 -> minuscula.
+1510 REMark  Las direcciones absolutas del programa se reubican al cargar (tabla de
+1520 REMark  relocacion al final del fichero). Los parches conservan la unica reubicacion
+1530 REMark  de la zona ($531a) y no crean ninguna nueva: el acceso a la tabla es el
+1540 REMark  'lea $52ca.l,a0' original con otra direccion; el codigo de entrada usa pc.
+1550 REMark ================================================================
+1560 REMark ---------- BLOQUE 1: bytes esperados del zip_exe original ----------
+1570 DATA 6
+1580 REMark $5234: inicio de la rutina de impresion de un caracter:
+1590 REMark         link a6,#-38      (4E56 FFDA)
+1600 DATA 21044,4
+1610 DATA 78,86,255,218
+1620 REMark $527e: llamada a una rutina vacia (solo link/unlk/rts):
+1630 REMark         jsr $3f9e         (4EB9 + direccion reubicable)
+1640 DATA 21118,6
+1650 DATA 78,185,0,0,63,158
+1660 REMark $5288: salto original que imprimia '?' si la rutina vacia devolvia 0:
+1670 REMark         beq.w $5354       (6700 00CA)
+1680 DATA 21128,4
+1690 DATA 103,0,0,202
+1700 REMark $52ba: inicio del codigo antiguo de rangos (box drawing y '?'):
+1710 REMark         cmp.l #$b2,d3 ; ble.s $5308   (B6BC 000000B2 6F46)
+1720 DATA 21178,8
+1730 DATA 182,188,0,0,0,178,111,70
+1740 REMark $5318: carga de la tabla antigua ('ae','oe','ue'...):
+1750 REMark         lea $5220.l,a0    (41F9 + direccion reubicable)
+1760 DATA 21272,6
+1770 DATA 65,249,0,0,82,32
+1780 REMark $4d42: segunda via de impresion, llama directo a la rutina de pantalla:
+1790 REMark         jsr $5378         (4EB9 + direccion reubicable)
+1800 DATA 19778,6
+1810 DATA 78,185,0,0,83,120
+1820 REMark ---------- BLOQUE 2: parches de SALIDA (posicion, cuantos, bytes) ----------
+1830 DATA 6
+1840 REMark PARCHE 1 - $5288: quita el salto a '?'. Antes: beq.w $5354.
+1850 REMark   Ahora: nop ; nop  (4E71 4E71).  Asi siempre se sigue con la conversion.
+1860 DATA 21128,4
+1870 DATA 78,113,78,113
+1880 REMark PARCHE 2 - $4d44: la llamada de $4d42 'jsr $5378' pasa a 'jsr $5234'.
+1890 REMark   Solo se cambia la direccion (long reubicable): 00005378 -> 00005234.
+1900 REMark   Asi ese camino de impresion tambien convierte los acentos.
+1910 DATA 19780,4
+1920 DATA 0,0,82,52
+1930 REMark PARCHE 3a - $52ba: nuevo codigo de seleccion (sustituye al antiguo de rangos):
+1940 REMark   $52ba  move.w d3,d0             3003            ; d0 = ZSCII
+1950 REMark   $52bc  subi.w #155,d0           0440 009B       ; d0 = ZSCII - 155 = indice en la tabla
+1960 REMark   $52c0  cmpi.w #68,d0            0C40 0044       ; la tabla tiene 69 entradas (155..223)
+1970 REMark   $52c4  bhi.w $5354              6200 008E       ; fuera de rango: se imprime lo que ya hay en el buffer (flechas, ?)
+1980 REMark   $52c8  bra.s $5318              604E            ; saltar la tabla
+1990 DATA 21178,16
+2000 DATA 48,3,4,64,0,155,12,64,0,68,98,0
+2010 DATA 0,142,96,78
+2020 REMark PARCHE 3b - $52ca: TABLA de 69 bytes. Entrada = codigo QL del ZSCII 155+i.
+2030 REMark   Formato del comentario:  ZSCII nombre = codigo QL    (* = el QL no tiene la
+2040 REMark   letra: se usa la misma sin acento).  Codigos QL 128-191 = caracteres acentuados.
+2050 REMark   La usan los dos sentidos: salida (ZSCII->QL) y entrada (busqueda QL->ZSCII).
+2060 DATA 21194,69
+2070 REMark 155 a diere=128; 156 o diere=132; 157 u diere=135; 158 A diere=160
+2080 DATA 128,132,135,160
+2090 REMark 159 O diere=164; 160 U diere=167; 161 ss (eszett)=156; 162 >> (comilla)=185
+2100 DATA 164,167,156,185
+2110 REMark 163 << (comilla)=184; 164 e diere=143; 165 i diere=146; 166 y diere=121*
+2120 DATA 184,143,146,121
+2130 REMark 167 E diere=69*; 168 I diere=73*; 169 a agudo=140; 170 e agudo=131
+2140 DATA 69,73,140,131
+2150 REMark 171 i agudo=147; 172 o agudo=150; 173 u agudo=153; 174 y agudo=121*
+2160 DATA 147,150,153,121
+2170 REMark 175 A agudo=65*; 176 E agudo=163; 177 I agudo=73*; 178 O agudo=79*
+2180 DATA 65,163,73,79
+2190 REMark 179 U agudo=85*; 180 Y agudo=89*; 181 a grave=141; 182 e grave=144
+2200 DATA 85,89,141,144
+2210 REMark 183 i grave=148; 184 o grave=151; 185 u grave=154; 186 A grave=65*
+2220 DATA 148,151,154,65
+2230 REMark 187 E grave=69*; 188 I grave=73*; 189 O grave=79*; 190 U grave=85*
+2240 DATA 69,73,79,85
+2250 REMark 191 a circ=142; 192 e circ=145; 193 i circ=149; 194 o circ=152
+2260 DATA 142,145,149,152
+2270 REMark 195 u circ=155; 196 A circ=65*; 197 E circ=69*; 198 I circ=73*
+2280 DATA 155,65,69,73
+2290 REMark 199 O circ=79*; 200 U circ=85*; 201 a anillo=130; 202 A anillo=162
+2300 DATA 79,85,130,162
+2310 REMark 203 o barra=134; 204 O barra=166; 205 a tilde=129; 206 n tilde=137
+2320 DATA 134,166,129,137
+2330 REMark 207 o tilde=133; 208 A tilde=161; 209 N tilde=169; 210 O tilde=165
+2340 DATA 133,161,169,165
+2350 REMark 211 ae=138; 212 AE=170; 213 c cedilla=136; 214 C cedilla=168
+2360 DATA 138,170,136,168
+2370 REMark 215 thorn=63*; 216 eth=100*; 217 THORN=63*; 218 ETH=68*
+2380 DATA 63,100,63,68
+2390 REMark 219 libra=96; 220 oe=139; 221 OE=171; 222 i abierta (!)=179
+2400 DATA 96,139,171,179
+2410 REMark 223 ? abierta=180
+2420 DATA 180
+2430 REMark $530f: 9 bytes de relleno (sin uso): la reubicacion de $531a debe caer en una
+2440 REMark   instruccion, asi que el siguiente codigo empieza exactamente en $5318.
+2450 DATA 21263,9
+2460 DATA 0,0,0,0,0,0,0,0,0
+2470 REMark PARCHE 3c - $5318: conversion ZSCII -> QL con la tabla:
+2480 REMark   $5318  lea $52ca.l,a0           41F9 0000 52CA  ; a0 = tabla (direccion reubicable)
+2490 REMark   $531e  move.b 0(a0,d0.w),(a2)   14B0 0000       ; caracter QL = tabla[ZSCII-155] al buffer de impresion
+2500 REMark   $5322  bra.s $5354              6030            ; imprimir la cadena de a2 (a4 ya vale 0)
+2510 REMark   ($5324-$5353: 48 bytes que quedan libres; los usa el parche de ENTRADA)
+2520 DATA 21272,12
+2530 DATA 65,249,0,0,82,202,20,176,0,0,96,48
+2540 REMark ---------- BLOQUE 3: byte esperado para el parche de ENTRADA ----------
+2550 DATA 1
+2560 REMark $1dce: bucle que pone en minusculas (tolower) el texto tecleado:
+2570 REMark   move.b 0(a4,a3.l),d0   (1034 B800)
+2580 DATA 7630,4
+2590 DATA 16,52,184,0
+2600 REMark ---------- BLOQUE 4: parches de ENTRADA (posicion, cuantos, bytes) ----------
+2610 REMark  El bucle de $1dce recorre el texto nuevo (a3 = indice, a4 = texto) y pasa
+2620 REMark  tolower a cada caracter. tolower mira ctype con el codigo con signo: los
+2630 REMark  codigos QL >=128 dan indices negativos y se alteran (la n pasa a N, la u a >>).
+2640 REMark  Ahora los >=128 no pasan por tolower: se convierten de QL a ZSCII.
+2650 DATA 2
+2660 REMark PARCHE E1 - $1dce: gancho. Sustituye 'move.b 0(a4,a3.l),d0' (4 bytes) por
+2670 REMark   bra.w $5324   (6000 3554). El codigo nuevo repite esa instruccion.
+2680 DATA 7630,4
+2690 DATA 96,0,53,84
+2700 REMark PARCHE E2 - $5324: codigo nuevo (48 bytes, termina justo en $5354):
+2710 REMark   $5324  move.b 0(a4,a3.l),d0     1034 B800       ; d0 = caracter tecleado
+2720 REMark   $5328  tst.b d0                 4A00            ; es ASCII (<128)?
+2730 REMark   $532a  bpl.w $1dd2              6A00 CAA6       ; si: camino original (ext, tolower, guardar)
+2740 REMark   $532e  cmpi.b #$ac,d0           0C00 00AC       ; codigos QL >= 172 no son mayusculas con acento
+2750 REMark   $5332  bcc.s $5338              6404            ; saltar
+2760 REMark   $5334  bclr #5,d0               0880 0005       ; mayuscula QL (160-171) -> minuscula (128-139): quita el bit 5
+2770 REMark   $5338  lea $52ca(pc),a0         41FA FF90       ; a0 = tabla (relativo al pc: no necesita reubicacion)
+2780 REMark   $533c  moveq #68,d1             7244            ; indice = 68 (ultima entrada)
+2790 REMark   $533e  cmp.b 0(a0,d1.w),d0      B030 1000       ; busca el codigo QL en la tabla, de atras adelante
+2800 REMark   $5342  dbeq d1,$533e            57C9 FFFA       ; repetir hasta encontrarlo o llegar a -1
+2810 REMark   $5346  bne.s $5350              6608            ; no esta (ej. letras griegas): se deja el caracter como esta
+2820 REMark   $5348  addi.w #155,d1           0641 009B       ; indice + 155 = codigo ZSCII
+2830 REMark   $534c  move.b d1,0(a4,a3.l)     1981 B800       ; guardar el ZSCII en el texto
+2840 REMark   $5350  bra.w $1de4              6000 CA92       ; siguiente caracter del bucle (addq.l #1,a3 ...)
+2850 DATA 21284,48
+2860 DATA 16,52,184,0,74,0,106,0,202,166,12,0
+2870 DATA 0,172,100,4,8,128,0,5,65,250,255,144
+2880 DATA 114,68,176,48,16,0,87,201,255,250,102,8
+2890 DATA 6,65,0,155,25,129,184,0,96,0,202,146
+2900 REMark ==============================================================
+2910 REMark  PROCedure mensajes (linea)
+2920 REMark  Sustituye cadenas del interprete por su traduccion. Lee los DATA que
+2930 REMark  empiezan en la linea 'linea' (offset, original, longitud, traduccion;
+2940 REMark  acaban con offset -1). Solo escribe en la posicion de cada cadena: no
+2950 REMark  recorre el fichero. Pasada 1: comprueba longitudes y que el texto
+2960 REMark  original esta en su sitio. Pasada 2 (solo si todo es correcto): escribe.
+2970 REMark  Trabaja sobre el canal #3 (la copia abierta). No usa memoria extra.
+2980 REMark  Suma en la variable global msgtot cada mensaje traducido (entradas de mas de 1 byte).
+2990 REMark ==============================================================
+3000 DEFine PROCedure mensajes (linea)
+3010   LOCal pos, cnt, k, b%, o$, t$, bien
+3020   bien = 1
+3030   RESTORE linea
+3040   REPeat validar
+3050     READ pos, o$, cnt, t$
+3060     IF pos = -1 THEN EXIT validar
+3070     IF LEN(o$) <> cnt OR LEN(t$) <> cnt
+3080       PRINT '  [!] Longitud en ';pos;': original ';LEN(o$);', nuevo ';LEN(t$);', debe ser ';cnt
+3090       bien = 0
+3100     ELSE 
+3110       FOR k = 1 TO cnt
+3120         BGET #3\(pos + k - 1), b%
+3130         IF b% <> CODE(o$(k)) THEN bien = 0 : PRINT '  [!] El texto original no coincide en ';pos : EXIT k
+3140       END FOR k
+3150     END IF 
+3160   END REPeat validar
+3170   IF NOT bien
+3180     PRINT '  Mensajes NO traducidos (l'&CHR$(147)&'nea ';linea;'): no se ha escrito nada.'
+3190     msgerr = msgerr + 1
+3200     RETurn 
+3210   END IF 
+3220   RESTORE linea
+3230   REPeat escribir
+3240     READ pos, o$, cnt, t$
+3250     IF pos = -1 THEN EXIT escribir
+3260     FOR k = 1 TO cnt
+3270       BPUT #3\(pos + k - 1), CODE(t$(k))
+3280     END FOR k
+3290     IF cnt > 1 THEN msgtot = msgtot + 1 : REMark el parche de 1 byte (tecla S) no cuenta como mensaje
+3300   END REPeat escribir
+3310 END DEFine mensajes
+3320 REMark ==============================================================
+3330 REMark  TABLA UNICA DE MENSAJES (la lee el PROCedure mensajes).
+3340 REMark  Cada DATA: posicion en el fichero (sin cabecera QDOS), texto original,
+3350 REMark  longitud y traduccion. La traduccion mide EXACTAMENTE lo mismo que el
+3360 REMark  original (si sobra, se rellena con espacios). Ordenada por posicion.
+3370 REMark  Termina con -1. Son 30 mensajes mas 1 ajuste de 1 byte (tecla S, $3edd).
+3380 REMark  Los acentos se escriben con CHR$(codigo QL). Usados aqui: 140=a agudo  150=o agudo  179=! abierta  180=? abierta
+3390 REMark ==============================================================
+3400 REMark 1184 ($04a0)  "wrong game or version"  ->  "juego/version erronea"  [acentos: CHR$(150)=o agudo]
+3410 DATA 1184,"wrong game or version",21,"juego/versi"&CHR$(150)&"n err"&CHR$(150)&"nea"
+3420 REMark 3244 ($0cac)  "Game file not found"  ->  "Juego no encontrado"
+3430 DATA 3244,"Game file not found",19,"Juego no encontrado"
+3440 REMark 3442 ($0d72)  "Game file read error"  ->  "Error leyendo juego "
+3450 DATA 3442,"Game file read error",20,"Error leyendo juego "
+3460 REMark 4390 ($1126)  "Read from SAVE file failed"  ->  "Error al leer la partida  "
+3470 DATA 4390,"Read from SAVE file failed",26,"Error al leer la partida  "
+3480 REMark 4417 ($1141)  "Write to SAVE file failed"  ->  "Error grabando la partida"
+3490 DATA 4417,"Write to SAVE file failed",25,"Error grabando la partida"
+3500 REMark 4443 ($115b)  "Wrong game or version"  ->  "Juego/version erronea"  [acentos: CHR$(150)=o agudo]
+3510 DATA 4443,"Wrong game or version",21,"Juego/versi"&CHR$(150)&"n err"&CHR$(150)&"nea"
+3520 REMark 4465 ($1171)  "Cannot open SAVE file"  ->  "No se abre la partida"
+3530 DATA 4465,"Cannot open SAVE file",21,"No se abre la partida"
+3540 REMark 5380 ($1504)  "Script file create failed"  ->  "Error al crear el script "
+3550 DATA 5380,"Script file create failed",25,"Error al crear el script "
+3560 REMark 5408 ($1520)  "Script file open failed"  ->  "Error leyendo el script"
+3570 DATA 5408,"Script file open failed",23,"Error leyendo el script"
+3580 REMark 6376 ($18e8)  "Record file create failed"  ->  "Error al crear grabacion "  [acentos: CHR$(150)=o agudo]
+3590 DATA 6376,"Record file create failed",25,"Error al crear grabaci"&CHR$(150)&"n "
+3600 REMark 6402 ($1902)  "Recording or playback are already active."  ->  "Ya hay grabacion o reproduccion activa.  "  [acentos: CHR$(150)=o agudo]
+3610 DATA 6402,"Recording or playback are already active.",41,"Ya hay grabaci"&CHR$(150)&"n o reproducci"&CHR$(150)&"n activa.  "
+3620 REMark 6778 ($1a7a)  "Record file open failed"  ->  "Error leyendo grabacion"  [acentos: CHR$(150)=o agudo]
+3630 DATA 6778,"Record file open failed",23,"Error leyendo grabaci"&CHR$(150)&"n"
+3640 REMark 6804 ($1a94)  "Recording or replaying is already active."  ->  "Ya hay grabacion o reproduccion activa.  "  [acentos: CHR$(150)=o agudo]
+3650 DATA 6804,"Recording or replaying is already active.",41,"Ya hay grabaci"&CHR$(150)&"n o reproducci"&CHR$(150)&"n activa.  "
+3660 REMark 7950 ($1f0e)  "Too many words typed, discarding: "  ->  "Demasiadas palabras, descartando: "
+3670 DATA 7950,"Too many words typed, discarding: ",34,"Demasiadas palabras, descartando: "
+3680 REMark 9268 ($2434)  "Illegal operation"  ->  "Operacion ilegal "  [acentos: CHR$(150)=o agudo]
+3690 DATA 9268,"Illegal operation",17,"Operaci"&CHR$(150)&"n ilegal "
+3700 REMark 12022 ($2ef6)  "Insufficient memory to play game"  ->  "Memoria insuficiente para jugar "
+3710 DATA 12022,"Insufficient memory to play game",32,"Memoria insuficiente para jugar "
+3720 REMark 15628 ($3d0c)  "Proceed? (Y/N) "  ->  "?Seguir? (S/N) "  [acentos: CHR$(180)=? abierta]  *** ver tambien la tecla aceptada (Y -> S) en $3edd (16093), mas abajo
+3730 DATA 15628,"Proceed? (Y/N) ",15,CHR$(180)&"Seguir? (S/N) "
+3740 REMark 15644 ($3d1c)  "You are about to write over an existing file."  ->  "Vas a sobrescribir un fichero que ya existe. "
+3750 DATA 15644,"You are about to write over an existing file.",45,"Vas a sobrescribir un fichero que ya existe. "
+3760 REMark 15697 ($3d51)  '(Default is "'  ->  '  (Defecto: "'
+3770 DATA 15697,'(Default is "',13,'  (Defecto: "'
+3780 REMark 15711 ($3d5f)  "Enter a file name."  ->  "Escribe un nombre."
+3790 DATA 15711,"Enter a file name.",18,"Escribe un nombre."
+3800 REMark $3edd: cmp.b #$59,d3 (B63C 0059) compara la tecla con "Y"; pasa a #$53 = "S"
+3810 REMark   (la tecla ya llega en mayuscula: toupper). Coherente con el aviso (S/N).
+3820 DATA 16093,"Y",1,"S"
+3830 REMark 16159 ($3f1f)  "Fatal error: "  ->  "Error fatal: "
+3840 DATA 16159,"Fatal error: ",13,"Error fatal: "
+3850 REMark 16768 ($4180)  "No such property"  ->  "Prop. no hallada"
+3860 DATA 16768,"No such property",16,"Prop. no hallada"
+3870 REMark 17912 ($45f8)  "Attempted write out of data area"  ->  "Escritura fuera de area de datos"  [acentos: CHR$(140)=a agudo]
+3880 DATA 17912,"Attempted write out of data area",32,"Escritura fuera de "&CHR$(140)&"rea de datos"
+3890 REMark 18656 ($48e0)  " Moves: "  ->  " Turno: "
+3900 DATA 18656," Moves: ",8," Turno: "
+3910 REMark 18665 ($48e9)  " Score: "  ->  " Punt.: "
+3920 DATA 18665," Score: ",8," Punt.: "
+3930 REMark 18674 ($48f2)  " Time: "  ->  " Hora: "
+3940 DATA 18674," Time: ",7," Hora: "
+3950 REMark 19500 ($4c2c)  "[MORE]"  ->  "[Mas] "  [acentos: CHR$(140)=a agudo]
+3960 DATA 19500,"[MORE]",6,"[M"&CHR$(140)&"s] "
+3970 REMark 19912 ($4dc8)  "Bad colour!"  ->  "!Mal color!"  [acentos: CHR$(179)=! abierta]
+3980 DATA 19912,"Bad colour!",11,CHR$(179)&"Mal color!"
+3990 REMark 23322 ($5b1a)  "The story is loading..."  ->  "Cargando la historia..."
+4000 DATA 23322,"The story is loading...",23,"Cargando la historia..."
+4010 REMark 45838 ($b30e)  "Press a key to exit"  ->  "Pulsa una tecla... "
+4020 DATA 45838,"Press a key to exit",19,"Pulsa una tecla... "
+4030 DATA -1,"",0,""

@@ -1,0 +1,211 @@
+SELECCIÓN DE AVENTURAS CONVERSACIONALES
+
+Aventuras Inform en castellano y en el Sinclair QL
+seleccionadas por www.CAAD.es para www.SinclairQL.es
+
+
+Indice:
+-------
+
+- Advertencias
+- Requisitos
+- Pasando los archivos a disco
+- Contenido del disco
+- Las aventuras
+- Modo de empleo
+- Zip para QDOS
+- Cargar, salvar y otros
+- Acerca de
+- Agradecimientos
+
+
+Advertencias
+------------
+
+Los programas contenidos en los ficheros comprimidos ZIP para QL deben ser descomprimidos con unzip corriendo bajo QL, pues a diferencia de otros sistemas operativos, los ficheros ejecutables poseen una cabecera en donde se guarda información sin la que no podrían trabajar.
+
+El fichero zip_exe que aparece en el disco no tiene relación alguna con la utilidad de compresión de ficheros zip. Es el intérprete Z para QL.
+
+El intérprete Z no soporta bien los caracteres acentuados, las diéresis y otros como ñ, ç, etc... mostrando en pantalla '?' por cada carácter no reconocido. Aunque hemos estudiado la manera de superar esto, a falta del código fuente de zip para QDOS, no hemos encontrado ninguna solución aceptable salvo recompilar las aventuras sin acentos.  
+
+
+Requisitos
+----------
+
+Para su uso se necesita ampliación de memoria y unidad de disco.
+
+En cuanto a software, es necesario tener instalado el Toolkit II y alguna utilidad RAMdisk.
+
+Para pasar el contenido del archivo aventuras.zip a disco necesitará unzip bajo QL.
+
+
+Pasando los archivos a disco
+----------------------------
+
+Introduzca un disco de 720 KiB. completamente formateado bajo QL, o formatee uno con:
+
+  FORMAT flp1_aventuras
+
+Emplee, desde su sistema o emulador, las siguientes instrucciones para descomprimir el archivo aventuras.zip:
+
+  TK2_EXT
+  PROG_USE flp1_
+  DATA_USE flp1_
+  EX win1_unzip_exe;"aventuras.zip"
+
+Encontrarás más información y las utilidades necesarias en http://www.SinclairQL.es
+
+
+Contenido del disco
+-------------------
+
+Una vez descomprimido, el disco deberá contener los siguientes archivos:
+
+aventura_info  boot	  faro_z5     libro_z5	 navidad_info  olvido_z5
+aventura_z5    boot_info  leeme_txt   luna_info	 navidad_z5    zip_exe (1)
+bg_scr	       faro_info  libro_info  luna_z5    olvido_info
+
+boot       lanza el menú de selección y el programa zip con los parámetros correspondientes.
+boot_info  contiene la lista de las aventuras.
+bg_scr (2) contiene la imagen digitalizada que aparece en el menú.
+leeme_txt  contiene este documento. Formato PC.
+zip        es el intérprete Z para QDOS.
+*_info     contiene información de cada una de las aventuras.
+*_z5       son las aventuras contenidas en el disco.
+
+  (1) ejecutable con cabezera
+  (2) Fotografía: Parque del laberinto de Horta. Barcelona.
+
+
+Las aventuras
+-------------
+
+El disco contiene 6 aventuras conversacionales:
+
+- aventura	La original interactiva. Traducción de José Luis Díaz (1997)
+		http://wiki.caad.es/Aventura_(aventura)
+
+- faro		A lo lejos, un Faro. Ignacio Monge y Aryekaix (2000, 2007)
+		http://wiki.caad.es/A_lo_lejos_un_faro
+
+- libro		El libro que se aburría. Jenesis (2003)
+		http://wiki.caad.es/El_libro_que_se_aburría
+
+- luna		La sombra de la luna negra. Depresiv (2003) 
+		http://wiki.caad.es/La_Sombra_de_la_Luna_Negra
+
+- navidad	Una pequeña historia de Navidad. Lenko (2005)
+	 	http://wiki.caad.es/Una_pequeña_historia_de_Navidad
+
+- olvido	Olvido mortal. Akbarr (2000)
+		http://wiki.caad.es/Olvido_mortal
+
+Se han seleccionado estas aventuras en función de los siguientes criterios:
+
+- Que sean aventuras destacadas en la escena española de los juegos de aventuras.
+- Que animen a los usuarios a retomar su afición por las aventuras o a iniciarse en ellas.
+- Que su peso en KiB. no sea muy elevado para poder entrar en el disco.
+
+Debido a esto, muchas otras aventuras que podrían haber estado aquí no lo están. Esperemos que la afición por las aventuras anime a los usuarios a descargar nuevas aventuras y jugarlas.
+
+Y el mejor sitio para empezar es el Club de Aventuras AD: http://www.CAAD.es
+
+
+Modo de empleo
+--------------
+
+Introduce el disco en la unidad denominada flp1_ y pulsa F1 o F2.
+
+Puedes igualmente ejecutar el boot desde el sistema mediante:
+
+  LRUN flp1_boot
+
+Una vez se muestra el menú, seleccionamos la aventuda con las teclas del cursor y pulsamos Espacio para ejecutar el intérprete Z con la aventura seleccionada.
+
+El programa boot carga zip_exe en ram1_, por lo que, una vez en ejecución, podemos sacar el disco de la unidad de discos.
+
+Podemos volcar el contenido de aventuras.zip en cualquier dispositivo y ubicación que tenga espacio suficiente y modificar la variable disp$ del boot para indicar la nueva ubicación de los archivos, de este modo todo funcionará de la misma forma.
+
+También podemos lanzar directamente las aventuras desde la linea de comandos del sistema sin necesidad de usar boot.
+
+Recuerda teclear primero:
+
+  TK2_EXT
+
+para cargar el Toolkit II
+
+Teclee ahora:
+
+  EW flp1_zip_exe;"flp1_aventura_z5"
+
+O para usar zip a pantalla completa:
+
+  EW flp1_zip_exe,con_512x256a0x0;"flp1_aventura_z5"
+
+De esta forma cargará la aventura original directamente desde disco.
+
+
+Zip para QDOS
+-------------
+
+Zip (el intérprete) para QDOS (el sistema operativo del QL) forma parte del port de Luke Roberts de Inform de Graham Nelson. Para su uso requiere Toolkit II, unidad de disco y mucha RAM.
+
+Zip permite jugar aventuras z1 a z5 en el QL. El programa es multitarea, y si los juegos que estemos jugando lo permiten, y tenemos suficiente memoria, podemos tener una o mas instancias de zip corriendo al mismo tiempo. Podemos pasar de una a otra mediante la combinación de teclas CTRL+C.
+
+Vea la sección 'Modo de empleo' para saber cómo ejecutar el programa.
+
+En algunas BBS para QL, así como en algunas webs, aún pueden encontrarse los ficheros Infocom.zip e Inform.zip para QL con todo lo necesario para compilar e interpretar aventuras conversacionales. La última versión conocida data de 1995, y ni el código fuente ni el autor están localizables.
+
+
+Cargar, salvar y otros
+----------------------
+
+En la mayoría de los juegos inform encontrarás los siguientes comandos útiles:
+
+      save  - salva tu posición
+   restore  - carga una posición salvada
+    script  - salva todo el texto a un fichero
+  unscript  - para scrip
+    verify  - comprueba que el fichero de juego no está corrupto
+      undo  - deshace el último movimiento
+         g  - repite el último comando
+         z  - espera
+
+En zip, ALT+ENTER devolverá el último comando para editar. Esto es una facilidad del Toolkit II. Las teclas del cursor pueden ser usadas para editar tus comandos del modo habitual.
+
+Al salvar, restaurar, etc... podemos indicar el dispositivo de almacenamiento que deseemos, p.ej.:
+
+  'flp1_juego_sav'
+
+
+Acerca de
+---------
+
+Es un trabajo de Javier Guerra (aka: badaman) para http://sinclairql.es
+
+Este disco es libre de ser distribuído sin ánimo de lucro y haciendo referencia a www.sinclairql.es
+
+zip para QDOS de Luke Roberts está bajo dominio público.
+
+Las aventuras son propiedad de sus respectivos autores. Su distribución, a parte de este disco y bajo esta configuración, debe ser consultada.
+
+Lamentablemente el espacio en disco no permite añadir más información acerca de cada autor y de cada aventura en formato _txt.
+
+Visite www.caad.es, o bien wiki.caad.es, para descargar estas u otras muchas aventuras o para conocer más acerca del autor, la aventura, y de la licencia de uso de cada aventura de este disco.
+
+
+Agradecimientos
+---------------
+
+A Graham Nelson por Inform
+A Luke Roberts por su port a QDOS de Inform
+A los chicos y chicas del CAAD por su ayuda en la selección de las aventuras
+A los autores de las aventuras conversacionales que aparecen en este disco
+
+A todos ellos, muchas gracias.
+La aventura está más viva que nunca.
+
+
+------
+leeme_txt - Febrero de 2008
+
